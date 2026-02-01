@@ -45,7 +45,7 @@ $client = new WorkflowyClient(
     streamFactory: new HttpFactory()
 );
 
-$nodes = $client->nodes()->get('node-id');
+$node = $client->nodes()->get('node-id');
 ```
 
 ### Usage in Laravel
@@ -56,10 +56,11 @@ Use the Facade for clean, expressive syntax:
 use Workflowy\Laravel\Facades\Workflowy;
 use Workflowy\Enums\LayoutMode;
 
-// 1. Get the entire tree or a specific node
+// 1. Get the entire tree (root) or a specific node
 $node = Workflowy::nodes()->get();
 
 // 2. Create a new node
+// priority: 0 = top, 1 = bottom
 $newItem = Workflowy::nodes()->create(
     parentId: $node->id,
     name: 'My New Task',
@@ -72,6 +73,8 @@ Workflowy::nodes()->check($newItem->id);
 
 // 4. List targets/shortcuts
 $targets = Workflowy::targets()->list();
+$inbox = $targets[0];
+echo $inbox->nodeName; // 'Inbox'
 ```
 
 ## Data Transfer Objects (DTOs)
@@ -83,6 +86,12 @@ The SDK returns `readonly` objects to ensure data integrity and IDE autocompleti
 echo $node->name;        // string
 echo $node->isCompleted; // bool
 echo $node->createdAt->format('Y-m-d'); // DateTimeImmutable
+echo count($node->children); // int (array of NodeData)
+
+// Check layout mode (Enum)
+if ($node->layoutMode === LayoutMode::ToDo) {
+    echo "This is a checklist";
+}
 ```
 
 ## License
