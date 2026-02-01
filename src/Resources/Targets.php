@@ -12,7 +12,10 @@ readonly class Targets
     public function __construct(private WorkflowyClient $client) {}
 
     /**
-     * @return TargetData[]
+     * Lists all available targets (both system and user-defined shortcuts).
+     *
+     * @return TargetData[] List of available targets
+     * @throws \Workflowy\Exceptions\WorkflowyException If API request fails
      */
     public function list(): array
     {

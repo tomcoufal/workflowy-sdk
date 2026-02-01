@@ -12,8 +12,12 @@ readonly class Nodes
     public function __construct(private WorkflowyClient $client) {}
 
     /**
-     * Fetch a node and its children.
-     * Use 'None' for root, or target keys like 'inbox', 'home'.
+     * Retrieves a node and its direct children.
+     *
+     * @param string $nodeId Node UUID or target key (e.g., 'inbox', 'home', 'None' for root)
+     * @return NodeData The requested node with its children populated
+     * @throws \Workflowy\Exceptions\NotFoundException If node is not found
+     * @throws \Workflowy\Exceptions\WorkflowyException On other API errors
      */
     public function get(string $nodeId = 'None'): NodeData
     {
@@ -49,6 +53,16 @@ readonly class Nodes
         return NodeData::fromArray($nodeDetails);
     }
 
+    /**
+     * Creates a new node under a parent.
+     *
+     * @param string $parentId Parent node UUID or target key (e.g., 'inbox')
+     * @param string $name The text content of the node
+     * @param int $priority Position: 0 for top, any other value for bottom
+     * @param string|null $note Optional note content
+     * @return NodeData The newly created node
+     * @throws \Workflowy\Exceptions\WorkflowyException If creation fails
+     */
     public function create(string $parentId, string $name, int $priority = 0, ?string $note = null): NodeData
     {
         $response = $this->client->request('POST', 'nodes', [
@@ -69,6 +83,15 @@ readonly class Nodes
         throw new \RuntimeException("Failed to create node, no item_id returned.");
     }
 
+    /**
+     * Updates an existing node's attributes.
+     *
+     * @param string $id Node UUID
+     * @param array $attributes Associative array of attributes to update (e.g., ['name' => 'New Name', 'note' => 'New Note'])
+     * @return NodeData The updated node
+     * @throws \Workflowy\Exceptions\NotFoundException If node does not exist
+     * @throws \Workflowy\Exceptions\WorkflowyException On other API errors
+     */
     public function update(string $id, array $attributes): NodeData
     {
         // Endpoint: POST /nodes/:id
@@ -76,17 +99,40 @@ readonly class Nodes
         return $this->get($id);
     }
 
+    /**
+     * Permanently deletes a node.
+     *
+     * @param string $id Node UUID
+     * @throws \Workflowy\Exceptions\NotFoundException If node does not exist
+     * @throws \Workflowy\Exceptions\WorkflowyException On other API errors
+     */
     public function delete(string $id): void
     {
         $this->client->request('DELETE', "nodes/{$id}");
     }
     
+    /**
+     * Marks a node as completed.
+     *
+     * @param string $id Node UUID
+     * @return NodeData The updated node
+     * @throws \Workflowy\Exceptions\NotFoundException If node does not exist
+     * @throws \Workflowy\Exceptions\WorkflowyException On other API errors
+     */
     public function check(string $id): NodeData
     {
         $this->client->request('POST', "nodes/{$id}/complete");
         return $this->get($id);
     }
 
+    /**
+     * Marks a node as incomplete (active).
+     *
+     * @param string $id Node UUID
+     * @return NodeData The updated node
+     * @throws \Workflowy\Exceptions\NotFoundException If node does not exist
+     * @throws \Workflowy\Exceptions\WorkflowyException On other API errors
+     */
     public function uncheck(string $id): NodeData
     {
         $this->client->request('POST', "nodes/{$id}/uncomplete");
